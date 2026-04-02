@@ -1,0 +1,112 @@
+# YouTube Shorts Automation - Configuration
+# Tech Facts / Did You Know niche
+
+# --- Content Settings ---
+content:
+  niche: "tech"
+  topics:
+    - "AI and machine learning"
+    - "cybersecurity"
+    - "programming languages"
+    - "gadgets and hardware"
+    - "internet history"
+    - "software tips and tricks"
+    - "future technology"
+    - "space tech"
+    - "quantum computing"
+    - "robotics"
+  tone: "engaging, casual, informative"
+  duration_seconds: 55  # target ~55s to stay under 60s
+  max_words: 140  # ~140 words for 55 seconds at natural pace
+
+# --- Image Generation (Stable Diffusion) ---
+images:
+  model_id: "stabilityai/stable-diffusion-xl-base-1.0"
+  # Use a smaller model if VRAM is tight on RTX 2050 (4GB):
+  # model_id: "stabilityai/stable-diffusion-2-1"
+  num_images: 5  # number of images per video
+  width: 768
+  height: 1344  # 9:16 aspect ratio
+  guidance_scale: 7.5
+  num_inference_steps: 30
+  negative_prompt: "blurry, low quality, text, watermark, logo, bad anatomy, deformed"
+
+# --- Voice (Edge-TTS) ---
+voice:
+  engine: "edge-tts"
+  voice_name: "en-US-ChristopherNeural"  # male, clear, engaging
+  # Other options:
+  # "en-US-GuyNeural" - casual male
+  # "en-US-JennyNeural" - female
+  # "en-US-AriaNeural" - female, newscast
+  rate: "+5%"  # slightly faster for shorts
+  pitch: "+0Hz"
+
+# --- Captions ---
+captions:
+  enabled: true
+  whisper_model: "base"  # tiny, base, small, medium, large
+  font_size: 60
+  font_color: "white"
+  stroke_color: "black"
+  stroke_width: 3
+  position: "center"  # top, center, bottom
+  max_chars_per_line: 25
+  style: "word_highlight"  # word_highlight, sentence, karaoke
+
+# --- Video Assembly ---
+video:
+  width: 1080
+  height: 1920  # 9:16
+  fps: 30
+  background_color: "#000000"
+  transition: "crossfade"  # crossfade, fade, cut
+  transition_duration: 0.5
+  background_music: null  # path to background music file (optional)
+  music_volume: 0.15  # background music volume (0.0 - 1.0)
+  zoom_effect: true  # Ken Burns zoom on images
+  zoom_range: [1.0, 1.15]  # zoom from 1.0x to 1.15x
+
+# --- YouTube Upload ---
+youtube:
+  credentials_file: "client_secrets.json"  # OAuth2 credentials
+  token_file: "token.json"
+  category_id: "28"  # Science & Technology
+  privacy_status: "public"  # public, private, unlisted
+  default_tags:
+    - "tech"
+    - "technology"
+    - "tech facts"
+    - "did you know"
+    - "shorts"
+    - "tech shorts"
+  title_prefix: ""
+  title_suffix: " #shorts #tech"
+  made_for_kids: false
+
+# --- Schedule ---
+schedule:
+  enabled: true
+  videos_per_day: 1
+  upload_time: "10:00"  # 24hr format, local time
+
+# --- Paths ---
+paths:
+  output_dir: "output"
+  temp_dir: "temp"
+  fonts_dir: "assets/fonts"
+
+# --- AI Script Generation ---
+script_generation:
+  # Use local Ollama (free) or Claude API
+  provider: "ollama"  # "ollama" (free) or "claude" (paid)
+
+  # Ollama settings (free, runs locally)
+  ollama:
+    model: "llama3.2"  # or "mistral", "gemma2"
+    base_url: "http://localhost:11434"
+
+  # Claude API settings (paid, better quality)
+  claude:
+    model: "claude-haiku-4-5-20251001"
+    api_key_env: "ANTHROPIC_API_KEY"  # reads from environment variable

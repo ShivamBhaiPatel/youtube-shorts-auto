@@ -1,0 +1,33 @@
+# YouTube Shorts Automation - Dependencies
+
+# AI / Script Generation
+anthropic>=0.42.0          # Claude API (optional, if using paid)
+ollama>=0.4.0              # Local LLM (free)
+
+# Image Generation
+diffusers>=0.31.0          # Stable Diffusion
+transformers>=4.47.0
+accelerate>=1.2.0
+torch>=2.5.0               # PyTorch with CUDA
+safetensors>=0.4.0
+
+# Voice Generation
+edge-tts>=6.1.0            # Free Microsoft TTS
+
+# Captions
+openai-whisper>=20231117   # Whisper for transcription
+
+# Video Assembly
+moviepy>=2.1.0             # Video editing
+Pillow>=11.0.0             # Image processing
+numpy>=1.26.0
+
+# YouTube Upload
+google-api-python-client>=2.150.0
+google-auth-oauthlib>=1.2.0
+google-auth-httplib2>=0.2.0
+
+# Config & Utils
+pyyaml>=6.0.0
+rich>=13.9.0               # Pretty console output
+schedule>=1.2.0            # Task scheduling
