@@ -4,6 +4,8 @@ import json
 import random
 import yaml
 import ollama as ollama_client
+from dotenv import load_dotenv
+load_dotenv()
 
 SYSTEM_PROMPT = """You are a viral YouTube Shorts scriptwriter for tech content.
 You write short, punchy, engaging scripts about technology facts and trends.
@@ -148,7 +150,152 @@ def generate_with_claude(config, topic, niche, subtopic):
     return json.loads(response_text[start:end])
 
 
-def generate_script(config=None):
+def generate_with_gemini(config, topic, niche, subtopic):
+    """Generate script using Gemini API — reuses existing GEMINI_API_KEY."""
+    import os
+    from google import genai
+    from google.genai import types
+
+    gemini_config = config["script_generation"]["gemini"]
+    content_config = config["content"]
+
+    api_key = os.environ.get(gemini_config["api_key_env"])
+    if not api_key:
+        raise ValueError(
+            f"Set {gemini_config['api_key_env']} environment variable for Gemini API"
+        )
+
+    client = genai.Client(api_key=api_key)
+
+    system = SYSTEM_PROMPT.format(
+        max_words=content_config["max_words"],
+        duration=content_config["duration_seconds"],
+    )
+    user = USER_PROMPT.format(
+        topic=topic,
+        niche=niche,
+        subtopic=subtopic,
+        duration=content_config["duration_seconds"],
+        max_words=content_config["max_words"],
+        num_images=config["images"]["num_images"],
+    )
+
+    response = client.models.generate_content(
+        model=gemini_config["model"],
+        contents=user + "\n\nRespond with valid JSON only.",
+        config=types.GenerateContentConfig(
+            system_instruction=system,
+            temperature=0.8,
+            response_mime_type="application/json",
+        ),
+    )
+
+    return json.loads(response.text)
+
+
+def generate_with_huggingface(config, topic, niche, subtopic):
+    """Generate script using HuggingFace model with TurboQuant KV cache compression.
+    Runs entirely on CPU (RAM), keeping VRAM free for SDXL and Whisper.
+    """
+    import gc
+    import torch
+    from transformers import AutoTokenizer, AutoModelForCausalLM
+
+    hf_config = config["script_generation"]["huggingface"]
+    content_config = config["content"]
+    model_id = hf_config["model"]
+    bits = hf_config.get("turbo_quant_bits", 4)
+
+    print(f"  Loading model: {model_id}")
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
+    model = AutoModelForCausalLM.from_pretrained(
+        model_id,
+        torch_dtype=torch.bfloat16,
+        device_map="cpu",
+    )
+    model.eval()
+
+    # Apply TurboQuant KV cache compression
+    try:
+        from turboquant import TurboQuantCache
+        cache = TurboQuantCache(bits=bits)
+        print(f"  TurboQuant: {bits}-bit KV cache (~6x less RAM during inference)")
+        use_turbo = True
+    except ImportError:
+        cache = None
+        use_turbo = False
+        print("  TurboQuant not installed — run: pip install turboquant")
+
+    system = SYSTEM_PROMPT.format(
+        max_words=content_config["max_words"],
+        duration=content_config["duration_seconds"],
+    )
+    user = USER_PROMPT.format(
+        topic=topic,
+        niche=niche,
+        subtopic=subtopic,
+        duration=content_config["duration_seconds"],
+        max_words=content_config["max_words"],
+        num_images=config["images"]["num_images"],
+    )
+
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": user + "\n\nRespond with valid JSON only."},
+    ]
+    prompt = tokenizer.apply_chat_template(
+        messages, tokenize=False, add_generation_prompt=True
+    )
+    inputs = tokenizer(prompt, return_tensors="pt")
+
+    generate_kwargs = dict(
+        max_new_tokens=1024,
+        temperature=0.8,
+        do_sample=True,
+        pad_token_id=tokenizer.eos_token_id,
+    )
+    if use_turbo:
+        generate_kwargs["past_key_values"] = cache
+        generate_kwargs["use_cache"] = True
+
+    with torch.no_grad():
+        outputs = model.generate(**inputs, **generate_kwargs)
+
+    new_tokens = outputs[0][inputs["input_ids"].shape[1]:]
+    response_text = tokenizer.decode(new_tokens, skip_special_tokens=True)
+
+    # Free RAM
+    del model
+    gc.collect()
+
+    start = response_text.find("{")
+    end = response_text.rfind("}") + 1
+    if start == -1 or end == 0:
+        raise ValueError("No JSON found in HuggingFace response")
+
+    return json.loads(response_text[start:end])
+
+
+def _normalize_result(result):
+    """Normalize AI response keys — local models often use variant names."""
+    # Normalize image_prompts from common variants
+    if "image_prompts" not in result:
+        for key in ("images", "image_prompt", "prompts", "scenes", "visual_prompts"):
+            if key in result and isinstance(result[key], list):
+                result["image_prompts"] = result.pop(key)
+                break
+
+    # Normalize script from common variants
+    if "script" not in result:
+        for key in ("narration", "text", "voiceover", "content", "body"):
+            if key in result and isinstance(result[key], str):
+                result["script"] = result.pop(key)
+                break
+
+    return result
+
+
+def generate_script(config=None, max_retries=3):
     """Main entry point - generate a script with image prompts."""
     if config is None:
         config = load_config()
@@ -159,18 +306,37 @@ def generate_script(config=None):
     print(f"  Topic: {topic}")
     print(f"  Provider: {provider}")
 
-    if provider == "ollama":
-        result = generate_with_ollama(config, topic, niche, subtopic)
-    elif provider == "claude":
-        result = generate_with_claude(config, topic, niche, subtopic)
-    else:
-        raise ValueError(f"Unknown provider: {provider}")
+    last_error = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            if provider == "ollama":
+                result = generate_with_ollama(config, topic, niche, subtopic)
+            elif provider == "claude":
+                result = generate_with_claude(config, topic, niche, subtopic)
+            elif provider == "gemini":
+                result = generate_with_gemini(config, topic, niche, subtopic)
+            elif provider == "huggingface":
+                result = generate_with_huggingface(config, topic, niche, subtopic)
+            else:
+                raise ValueError(f"Unknown provider: {provider}")
 
-    # Validate required fields
-    required = ["title", "script", "image_prompts"]
-    for field in required:
-        if field not in result:
-            raise ValueError(f"Missing field in AI response: {field}")
+            result = _normalize_result(result)
+
+            # Validate required fields
+            required = ["title", "script", "image_prompts"]
+            for field in required:
+                if field not in result:
+                    raise ValueError(f"Missing field in AI response: {field}")
+
+            break  # success
+        except (ValueError, json.JSONDecodeError, KeyError) as e:
+            last_error = e
+            if attempt < max_retries:
+                print(f"  Attempt {attempt} failed ({e}), retrying...")
+            else:
+                raise ValueError(
+                    f"Failed after {max_retries} attempts. Last error: {last_error}"
+                )
 
     # Ensure we have enough image prompts
     num_needed = config["images"]["num_images"]

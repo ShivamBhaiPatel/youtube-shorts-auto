@@ -1,0 +1,43 @@
+{
+  "name": "Refactor",
+  "description": "Analyze codebase architecture, plan incremental refactoring steps, execute changes, and validate with tests and build.",
+  "nodes": [
+    {
+      "id": "analyze-structure",
+      "type": "ai_prompt",
+      "config": {
+        "prompt": "Analyze codebase architecture. Identify code smells, duplication, and areas for improvement."
+      },
+      "position": { "x": 40, "y": 40 }
+    },
+    {
+      "id": "plan-refactor",
+      "type": "ai_prompt",
+      "config": {
+        "prompt": "Create a step-by-step refactoring plan. Each step should be independently deployable."
+      },
+      "position": { "x": 260, "y": 40 }
+    },
+    {
+      "id": "execute-refactor",
+      "type": "ai_prompt",
+      "config": {
+        "prompt": "Execute the refactoring plan. Preserve all existing behavior. Run tests after each change."
+      },
+      "position": { "x": 480, "y": 40 }
+    },
+    {
+      "id": "validate-refactor",
+      "type": "shell",
+      "config": {
+        "command": "npm test && npm run build"
+      },
+      "position": { "x": 700, "y": 40 }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "from": "analyze-structure", "to": "plan-refactor" },
+    { "id": "e2", "from": "plan-refactor", "to": "execute-refactor" },
+    { "id": "e3", "from": "execute-refactor", "to": "validate-refactor" }
+  ]
+}

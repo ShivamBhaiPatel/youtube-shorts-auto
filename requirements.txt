@@ -3,9 +3,12 @@
 # AI / Script Generation
 anthropic>=0.42.0          # Claude API (optional, if using paid)
 ollama>=0.4.0              # Local LLM (free)
+turboquant>=0.1.0          # KV cache compression (6x less RAM during inference)
 
 # Image Generation
-diffusers>=0.31.0          # Stable Diffusion
+google-genai>=1.70.0       # Gemini image generation (free tier)
+requests>=2.31.0           # HTTP client (for Pollinations fallback)
+diffusers>=0.31.0          # Stable Diffusion (optional, for local_sd)
 transformers>=4.47.0
 accelerate>=1.2.0
 torch>=2.5.0               # PyTorch with CUDA

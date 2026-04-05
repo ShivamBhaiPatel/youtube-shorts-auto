@@ -1,0 +1,43 @@
+{
+  "name": "Test Coverage",
+  "description": "Run coverage scan, identify gaps in test coverage, write tests for uncovered paths, and verify improved coverage.",
+  "nodes": [
+    {
+      "id": "scan-coverage",
+      "type": "shell",
+      "config": {
+        "command": "npx vitest run --coverage 2>&1 || true"
+      },
+      "position": { "x": 40, "y": 40 }
+    },
+    {
+      "id": "identify-gaps",
+      "type": "ai_prompt",
+      "config": {
+        "prompt": "Analyze the coverage report. Identify uncovered code paths, edge cases, and missing test scenarios."
+      },
+      "position": { "x": 260, "y": 40 }
+    },
+    {
+      "id": "write-tests",
+      "type": "ai_prompt",
+      "config": {
+        "prompt": "Write tests for the identified gaps. Focus on meaningful coverage, not just line count."
+      },
+      "position": { "x": 480, "y": 40 }
+    },
+    {
+      "id": "verify-coverage",
+      "type": "shell",
+      "config": {
+        "command": "npx vitest run --coverage 2>&1 || true"
+      },
+      "position": { "x": 700, "y": 40 }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "from": "scan-coverage", "to": "identify-gaps" },
+    { "id": "e2", "from": "identify-gaps", "to": "write-tests" },
+    { "id": "e3", "from": "write-tests", "to": "verify-coverage" }
+  ]
+}

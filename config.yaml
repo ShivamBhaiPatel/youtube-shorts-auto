@@ -19,14 +19,28 @@ content:
   duration_seconds: 55  # target ~55s to stay under 60s
   max_words: 140  # ~140 words for 55 seconds at natural pace
 
-# --- Image Generation (Stable Diffusion) ---
+# --- Image Generation ---
 images:
-  model_id: "stabilityai/stable-diffusion-xl-base-1.0"
-  # Use a smaller model if VRAM is tight on RTX 2050 (4GB):
-  # model_id: "stabilityai/stable-diffusion-2-1"
-  num_images: 5  # number of images per video
+  provider: "gemini"          # "gemini" (free, fast), "pollinations" (free, no key), "local_sd" (GPU)
+  fallback_provider: "pollinations"  # auto-fallback if primary fails
+  num_images: 5               # number of images per video
+
+  # Gemini settings (free tier: 500 images/day)
+  gemini:
+    model: "gemini-2.5-flash-image"
+    api_key_env: "GEMINI_API_KEY"   # reads from environment variable
+    aspect_ratio: "9:16"            # 9:16 for Shorts
+
+  # Pollinations settings (completely free, no API key)
+  pollinations:
+    model: "flux"
+    width: 768
+    height: 1344
+
+  # Local Stable Diffusion settings (GPU required, slow on 4GB VRAM)
+  sd_model_id: "stabilityai/stable-diffusion-xl-base-1.0"
   width: 768
-  height: 1344  # 9:16 aspect ratio
+  height: 1344
   guidance_scale: 7.5
   num_inference_steps: 30
   negative_prompt: "blurry, low quality, text, watermark, logo, bad anatomy, deformed"
@@ -99,14 +113,24 @@ paths:
 # --- AI Script Generation ---
 script_generation:
   # Use local Ollama (free) or Claude API
-  provider: "ollama"  # "ollama" (free) or "claude" (paid)
+  provider: "gemini"  # "ollama" (free), "claude" (paid), "gemini" (reuses existing key)
 
   # Ollama settings (free, runs locally)
   ollama:
-    model: "llama3.2"  # or "mistral", "gemma2"
+    model: "qwen3:4b"  # 4B params, better quality; fallback: "llama3.2", "qwen3-vl:4b"
     base_url: "http://localhost:11434"
 
   # Claude API settings (paid, better quality)
   claude:
     model: "claude-haiku-4-5-20251001"
     api_key_env: "ANTHROPIC_API_KEY"  # reads from environment variable
+
+  # Gemini API (reuses existing GEMINI_API_KEY from image generation)
+  gemini:
+    model: "gemini-2.5-flash"
+    api_key_env: "GEMINI_API_KEY"
+
+  # HuggingFace + TurboQuant (runs on CPU/RAM, no VRAM used)
+  huggingface:
+    model: "Qwen/Qwen2.5-1.5B-Instruct"  # small, fast, good instruction following
+    turbo_quant_bits: 4                    # 3 = max compression, 4 = balanced, 8 = quality

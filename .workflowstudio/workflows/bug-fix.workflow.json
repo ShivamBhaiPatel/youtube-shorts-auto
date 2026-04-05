@@ -1,0 +1,43 @@
+{
+  "name": "Bug Fix",
+  "description": "Investigate a bug, apply a targeted fix, write regression tests, and verify with the test suite.",
+  "nodes": [
+    {
+      "id": "investigate-bug",
+      "type": "ai_prompt",
+      "config": {
+        "prompt": "Investigate the bug. Find root cause. Check git blame, logs, related code."
+      },
+      "position": { "x": 40, "y": 40 }
+    },
+    {
+      "id": "fix-bug",
+      "type": "ai_prompt",
+      "config": {
+        "prompt": "Fix the bug based on investigation. Ensure minimal, targeted change."
+      },
+      "position": { "x": 260, "y": 40 }
+    },
+    {
+      "id": "write-regression-tests",
+      "type": "ai_prompt",
+      "config": {
+        "prompt": "Write regression tests that reproduce the original bug and verify the fix."
+      },
+      "position": { "x": 480, "y": 40 }
+    },
+    {
+      "id": "verify-fix",
+      "type": "shell",
+      "config": {
+        "command": "npm test"
+      },
+      "position": { "x": 700, "y": 40 }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "from": "investigate-bug", "to": "fix-bug" },
+    { "id": "e2", "from": "fix-bug", "to": "write-regression-tests" },
+    { "id": "e3", "from": "write-regression-tests", "to": "verify-fix" }
+  ]
+}

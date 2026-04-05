@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "browsermcp": {
+      "command": "npx",
+      "args": ["-y", "@browsermcp/mcp"],
+      "cwd": "${workspaceRoot}",
+      "timeoutMs": 120000
+    }
+  }
+}

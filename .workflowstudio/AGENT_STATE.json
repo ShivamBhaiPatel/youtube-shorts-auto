@@ -1,0 +1,46 @@
+{
+  "project_name": "youtube-shorts-auto",
+  "workflow_status": "READY",
+  "current_owner": "",
+  "active_task": "",
+  "active_task_title": "",
+  "current_phase": "phase_9_telegram",
+  "next_owner": "",
+  "last_updated": "2026-04-05",
+  "must_read": [
+    ".workflowstudio/CONTROL_CENTER.md",
+    ".workflowstudio/PROJECT_CONTEXT.md",
+    ".workflowstudio/TASK_QUEUE.md",
+    "CLAUDE.md",
+    "config.yaml"
+  ],
+  "role_prompt_map": {
+    "Repo Analyst": ".workflowstudio/prompts/REPO_ANALYST.md",
+    "Implementer": ".workflowstudio/prompts/IMPLEMENTER.md",
+    "Refactorer": ".workflowstudio/prompts/REFACTORER.md",
+    "Planner": ".workflowstudio/prompts/PLANNER.md",
+    "Validator": ".workflowstudio/prompts/VALIDATOR.md",
+    "Manager": ".workflowstudio/prompts/MANAGER.md"
+  },
+  "owner_aliases": {
+    "Repo Analyst": ["Opus", "Claude Opus", "Claude Opus 4"],
+    "Implementer": ["Codex", "codex", "Claude Code"],
+    "Refactorer": ["Sonnet", "Claude Sonnet", "Claude Sonnet 4"],
+    "Planner": ["ChatGPT", "GPT", "Gemini"],
+    "Validator": ["Gemini", "gemini"],
+    "Manager": ["Haiku", "haiku", "Flash", "flash"]
+  },
+  "agent_naming_convention": "{Model}-{RoleInitial}{Instance} — e.g., Codex-I1, Opus-R1",
+  "agent_registry": {
+    "Opus-R1": "Repo Analyst — architecture review, pipeline contracts",
+    "Codex-I1": "Implementer — Python code, new features, bug fixes",
+    "Gemini-V1": "Validator — test runs, API verification",
+    "Haiku-M1": "Manager — task routing, priority decisions"
+  },
+  "handoff_required": true,
+  "notes": [
+    "Phases 1-8 complete (script, images, voice, captions, video, upload, scheduler, topics)",
+    "Runs on Acer Aspire 7 (automation server), not MSI",
+    "GPU budget: 4GB VRAM — never run SDXL + Whisper simultaneously"
+  ]
+}

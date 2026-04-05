@@ -18,6 +18,9 @@ import shutil
 import argparse
 from datetime import datetime
 
+from dotenv import load_dotenv
+load_dotenv()  # loads .env file automatically
+
 import yaml
 from rich.console import Console
 from rich.panel import Panel

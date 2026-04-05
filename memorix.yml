@@ -1,0 +1,6 @@
+project:
+  name: youtube-shorts-auto
+  description: Fully automated YouTube Shorts pipeline — AI script + images + voice + captions + video + upload
+
+memory:
+  agent_memory_path: D:\Development\agent-memory\projects\youtube-shorts-auto
